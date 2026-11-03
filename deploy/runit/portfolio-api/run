@@ -1,0 +1,8 @@
+#!/data/data/com.termux/files/usr/bin/sh
+
+set -a
+. /data/data/com.termux/files/home/homelab/apps/portfolio/portfolio-api.env
+set +a
+
+cd /data/data/com.termux/files/home/homelab/apps/portfolio
+exec ./portfolio-api

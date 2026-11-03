@@ -1,8 +1,7 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
-import { createServer } from 'node:http';
+import { mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -140,18 +139,59 @@ const browser = await chromium.launch({ headless: true });
     assert.ok(parseFloat(duration) <= 0.0001, `reduced-motion duration is ${duration}`);
     assert.equal(await reducedPage.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior), 'auto');
     await reducedPage.close();
-
+    
     // Language switcher preserves localized detail routes.
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(`${previewUrl}/id/proyek/lampu-terjadwal-arduino/`);
-    await page.locator('a[hreflang="en"]').click();
+
+    const idLanguageNav = page.getByRole('navigation', {
+      name: 'Pilih bahasa',
+      exact: true,
+    });
+
+    const englishLink = idLanguageNav.locator('a[hreflang="en"]');
+
+    assert.equal(
+      await englishLink.count(),
+      1,
+      'Expected exactly one English link in Indonesian language switcher',
+    );
+
+    await englishLink.click();
+
     await page.waitForURL(/\/en\/projects\/scheduled-lighting-arduino\//);
-    assert.match(await page.locator('h1').textContent(), /Scheduled Automatic Lighting/);
-    await page.locator('a[hreflang="id"]').click();
+
+    assert.match(
+      await page.locator('h1').textContent(),
+      /Scheduled Automatic Lighting/,
+    );
+
+    const enLanguageNav = page.getByRole('navigation', {
+      name: 'Select language',
+      exact: true,
+    });
+
+    const indonesianLink = enLanguageNav.locator('a[hreflang="id"]');
+
+    assert.equal(
+      await indonesianLink.count(),
+      1,
+      'Expected exactly one Indonesian link in English language switcher',
+    );
+
+    await indonesianLink.click();
+
     await page.waitForURL(/\/id\/proyek\/lampu-terjadwal-arduino\//);
 
+
+
     // Mobile menu: mouse, touch, and keyboard.
-    const mobile = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    
+    const mobile = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+    });
+
     const mobilePage = await mobile.newPage();
     const mobileErrors = [];
     mobilePage.on('console', (message) => {
@@ -179,14 +219,16 @@ const browser = await chromium.launch({ headless: true });
     await trigger.focus();
     await mobilePage.keyboard.press('Enter');
     await dialog.waitFor({ state: 'visible' });
-    await close.focus();
+    const firstFocusable = mobilePage.locator('#mobile-navigation a[href="/id/"]').first();
+    const lastFocusable = mobilePage.locator('#mobile-navigation a[hreflang="en"]').first();
+    await lastFocusable.focus();
     await mobilePage.keyboard.press('Tab');
-    const firstFocused = await mobilePage.evaluate(() => document.activeElement?.getAttribute('aria-label'));
-    assert.equal(firstFocused, 'Buka menu navigasi', 'Tab should wrap from close to trigger');
-    await close.focus();
+    const wrappedForward = await mobilePage.evaluate(() => document.activeElement?.getAttribute('href'));
+    assert.equal(wrappedForward, '/id/', 'Tab should wrap from the last focusable to the first');
+    await firstFocusable.focus();
     await mobilePage.keyboard.press('Shift+Tab');
-    const lastFocused = await mobilePage.evaluate(() => document.activeElement?.href);
-    assert.match(lastFocused ?? '', /\/en\/$/, 'Shift+Tab should wrap from close to the last language link');
+    const wrappedBackward = await mobilePage.evaluate(() => document.activeElement?.href);
+    assert.match(wrappedBackward ?? '', /\/en\/$/, 'Shift+Tab should wrap from the first focusable to the last');
     await mobilePage.keyboard.press('Escape');
     await dialog.waitFor({ state: 'hidden' });
     await mobilePage.waitForFunction(

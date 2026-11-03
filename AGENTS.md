@@ -6,7 +6,7 @@ Project-specific guidance for AI agents and contributors working in this reposit
 
 - Public URL: `https://portofolio.homelabchester.my.id`
 - Purpose: a bilingual personal portfolio covering technology, accounting, and business solutions: software development, enterprise systems, financial processes, data work, and automation.
-- Current stage: **Phase 5 complete**. Projects/articles live in SQLite behind a Go API (build-time reads, token-protected admin CRUD), and the bilingual contact form stores private submissions through the public contact endpoint. Testing and deployment are the remaining phases.
+- Current stage: **Phase 7 initial deployment complete**. The site is live through the existing Cloudflare Tunnel, Nginx serves the static build, and runit supervises Nginx plus the portfolio API. GitHub Actions builds and deploys on push to `master`. Contact submissions are stored privately on the target.
 - Do not invent the owner's identity, employment history, education, certifications, clients, achievements, project results, availability, or social links. Use clearly marked placeholders until real data is supplied.
 
 ## 2. Mandatory stack
@@ -146,6 +146,8 @@ GOOS=linux GOARCH=arm GOARM=7 go build ./...
 cd ../frontend
 npm run check
 npm run build
+npm run test:static
+npm run test:e2e     # requires Go, a built API, and Playwright Chromium
 ```
 
 Also verify manually:
@@ -158,6 +160,7 @@ Also verify manually:
 - Reduced-motion preference disables non-essential animation.
 - Content edits made through the admin API appear after a rebuild; drafts never do.
 - Contact API validation, persistence, honeypot, CORS, and rate-limit tests pass. Invalid submissions never show success, and no test messages remain in the real database.
+- Playwright Chromium is installed locally with `PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium`.
 - Later: Nginx config test (`nginx -t`) on a copy before touching production.
 
 Fix failures; do not suppress them.

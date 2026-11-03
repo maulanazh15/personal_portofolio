@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/sh
+
+mkdir -p /data/data/com.termux/files/usr/var/log/sv/portfolio-api
+exec svlogd -tt /data/data/com.termux/files/usr/var/log/sv/portfolio-api

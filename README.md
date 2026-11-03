@@ -4,8 +4,8 @@ A bilingual (Indonesian/English), static-first personal portfolio for software d
 
 **Live domain:** <https://portofolio.homelabchester.my.id>
 
-> **Status: Phase 5 complete — Go content API + contact form.**
-> All public pages are implemented in both locales, including project/article detail pages, RSS feeds, and a 404 page. Projects and articles are stored in SQLite and managed through a Go admin API; Astro pulls them at build time. The bilingual contact form validates and stores private submissions through the same Go service. Testing and deployment are the remaining phases.
+> **Status: Phase 7 initial deployment complete.**
+> The site is live at <https://portofolio.homelabchester.my.id>. Nginx serves the static build and proxies only `/api/v1/contact` to the Go service; runit supervises both Nginx and the portfolio API. GitHub Actions builds and deploys on push to `master` once the required secrets are configured.
 
 ## Stack
 
@@ -42,7 +42,10 @@ Open <http://localhost:4321/>. The root redirects to `/id/`; English lives at `/
 npm run sync:content  # pull content from the Go API into .generated/
 npm run check         # sync, then Astro + TypeScript strict validation
 npm run build         # sync, validate, and build to frontend/dist/
-npm run preview       # serve the production build locally
+npm run test         # run static HTML checks
+npm run test:static  # static checks without browser
+npm run test:e2e     # browser E2E (requires Go and Playwright Chromium)
+npm run test:all     # both static and browser checks
 ```
 
 The dev, check, and build scripts sync content automatically. If the API is
@@ -125,7 +128,52 @@ Minimal Light editorial system: warm off-white canvas, charcoal type, restrained
 
 ## Deployment
 
-The frontend is built in CI or locally and only `frontend/dist/` is deployed. Production must not run Node.js. The Go API will be cross-compiled for ARMv7 and supervised by runit behind the existing Nginx and Cloudflare Tunnel. See `AGENTS.md` for infrastructure safety rules.
+The live host is an Android/Termux ARMv7 device. Production runs only static
+files and the Go contact service; no Node.js process runs on the host.
+
+- Frontend artifact: `frontend/dist/` is published to
+  `/data/data/com.termux/files/home/homelab/sites/portfolio/public`.
+- Go artifact: `backend/portfolio-api` and `backend/portfolio-import` (ARMv7)
+  run from `/data/data/com.termux/files/home/homelab/apps/portfolio`.
+- Database: `/data/data/com.termux/files/home/homelab/apps/portfolio/data/portfolio.db`
+  is persistent and must never be deleted during deploys.
+- Nginx: `/data/data/com.termux/files/usr/etc/nginx/conf.d/portfolio.conf`
+  serves the site on port 8080 and proxies only `/api/` to `127.0.0.1:8090`.
+- Runit: `/data/data/com.termux/files/usr/var/service/portfolio-api` supervises
+  the Go service and starts on boot through `homelab/scripts/boot-start.sh`.
+- Tunnel: the existing Cloudflare Tunnel already forwards
+  `portofolio.homelabchester.my.id` to Nginx on port 8080. Its config was not
+  changed.
+
+GitHub Actions (`.github/workflows/deploy.yml`) builds both artifacts on
+`ubuntu-latest`, imports the Markdown seed into a temporary SQLite database,
+starts the API for the frontend build, then deploys over SSH. Required
+repository secrets:
+
+- `SSH_HOST`
+- `SSH_USER`
+- `SSH_PORT` (optional, defaults to 22)
+- `SSH_PRIVATE_KEY`
+
+The target's admin token is generated on the host and stored in
+`portfolio-api.env` (mode 0600). It is not a GitHub secret and is not used by
+CI. Content edits made through the admin API require an export/commit step
+before CI can publish them; otherwise build locally and run the deploy script.
+
+Manual deploy from this machine:
+
+```bash
+cd backend
+GOOS=linux GOARCH=arm GOARM=7 go build -o /tmp/portfolio-api ./cmd/server
+GOOS=linux GOARCH=arm GOARM=7 go build -o /tmp/portfolio-import ./cmd/import
+cd ../frontend
+npm run build
+# then copy frontend/dist, the binaries, and content/ to the target and run
+# deploy/scripts/remote-deploy.sh
+```
+
+Before changing the target Nginx config again, validate it with
+`nginx -t` on a copy.
 
 ## Security headers
 

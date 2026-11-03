@@ -1,0 +1,99 @@
+name: Deploy portfolio
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: portfolio-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27'
+
+      - name: Build Go binaries
+        run: |
+          cd backend
+          go mod download
+          GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags="-s -w" -o portfolio-api ./cmd/server
+          GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags="-s -w" -o portfolio-import ./cmd/import
+
+      - name: Seed content database
+        run: |
+          cd backend
+          mkdir -p /tmp/portfolio-data
+          go run ./cmd/import -db /tmp/portfolio-data/portfolio.db -dir ../content
+
+      - name: Start content API
+        run: |
+          cd backend
+          PORTFOLIO_ADDR=127.0.0.1:8099 \
+          PORTFOLIO_DB=/tmp/portfolio-data/portfolio.db \
+          PORTFOLIO_ADMIN_TOKEN=ci-only \
+          ./portfolio-api &
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8099/healthz >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8099/healthz
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          CONTENT_API_URL=http://127.0.0.1:8099 npm run build
+
+      - name: Package deployment artifacts
+        run: |
+          tar -czf portfolio-dist.tar.gz -C frontend dist
+          tar -czf portfolio-seed.tar.gz content
+          cp backend/portfolio-api backend/portfolio-import .
+          chmod 750 portfolio-api portfolio-import
+          mkdir -p /tmp/portfolio-deploy
+          cp portfolio-dist.tar.gz portfolio-seed.tar.gz portfolio-api portfolio-import deploy/scripts/remote-deploy.sh /tmp/portfolio-deploy/
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.SSH_PORT || 22 }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          scp -i ~/.ssh/deploy_key -P "$PORT" -r /tmp/portfolio-deploy "$SSH_USER@$SSH_HOST:/tmp/"
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" 'sh /tmp/portfolio-deploy/remote-deploy.sh'
+
+      - name: Smoke test
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" \
+            'curl -fsS -H "Host: portofolio.homelabchester.my.id" http://127.0.0.1:8080/ >/dev/null && curl -fsS -H "Host: portofolio.homelabchester.my.id" http://127.0.0.1:8080/api/healthz'
