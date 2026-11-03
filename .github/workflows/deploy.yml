@@ -80,6 +80,8 @@ jobs:
           test -n "$SSH_HOST" || { echo "::error::SSH_HOST is required"; exit 1; }
           test -n "$SSH_USER" || { echo "::error::SSH_USER is required"; exit 1; }
           test -n "$SSH_PRIVATE_KEY" || { echo "::error::SSH_PRIVATE_KEY is required"; exit 1; }
+
+      - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
