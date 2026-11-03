@@ -1,0 +1,22 @@
+---
+import { SITE } from '@/data/site';
+
+const target = '/id/';
+const canonical = new URL(target, SITE.url).href;
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Portofolio</title>
+    <meta name="robots" content="noindex, follow" />
+    <meta http-equiv="refresh" content={`0;url=${target}`} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <p><a href={target}>Buka portofolio</a></p>
+  </body>
+</html>

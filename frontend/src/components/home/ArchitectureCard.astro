@@ -1,0 +1,64 @@
+---
+import { getHome } from '@/i18n/home';
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const copy = getHome(lang).architecture;
+---
+
+<div class="relative">
+  <div
+    class="pointer-events-none absolute -right-4 -top-5 h-28 w-28 rounded-full bg-accent-soft blur-2xl"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="surface-card relative overflow-hidden">
+    <div class="border-b border-line bg-canvas/60 px-6 py-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="flex items-center gap-2 text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-muted">
+            <span class="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+            {copy.label}
+          </p>
+          <h2 class="mt-2 font-display text-lg font-semibold tracking-[-0.025em]">
+            {copy.title}
+          </h2>
+        </div>
+        <span class="rounded-full border border-line bg-surface px-2.5 py-1 text-[0.5625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+          {copy.badge}
+        </span>
+      </div>
+    </div>
+
+    <div class="p-5 sm:p-6">
+      <div class="relative">
+        <span class="absolute bottom-7 left-[1.125rem] top-7 w-px bg-line" aria-hidden="true"></span>
+        <ol class="relative space-y-1">
+          {copy.rows.map((row) => (
+            <li class="flex items-center gap-3 rounded-xl px-1.5 py-2 transition-colors hover:bg-canvas/70">
+              <span class="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-[0.625rem] font-semibold tabular-nums text-muted">
+                {row.step}
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold leading-tight">{row.label}</p>
+                <p class="mt-0.5 truncate text-[0.6875rem] text-muted">{row.detail}</p>
+              </div>
+              <span class="tag hidden bg-surface sm:inline-flex">{row.tag}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <p class="mt-5 border-t border-line pt-4 text-[0.6875rem] leading-relaxed text-faint">
+        {copy.footer}
+      </p>
+    </div>
+  </div>
+
+  <p class="mt-3 text-[0.6875rem] leading-relaxed text-faint">{copy.note}</p>
+</div>

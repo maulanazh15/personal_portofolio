@@ -1,0 +1,42 @@
+---
+import { getHome } from '@/i18n/home';
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const copy = getHome(lang).approach;
+---
+
+<section class="border-y border-line bg-surface">
+  <div class="container-page section">
+    <div class="grid gap-8 lg:grid-cols-12 lg:gap-12">
+      <div class="lg:col-span-3">
+        <p class="eyebrow">{copy.eyebrow}</p>
+      </div>
+
+      <div class="lg:col-span-9">
+        <h2 class="max-w-4xl text-3xl font-semibold leading-[1.1] tracking-[-0.035em] sm:text-4xl">
+          {copy.title}
+        </h2>
+
+        <div class="mt-8 grid gap-8 lg:grid-cols-12 lg:gap-10">
+          <p class="text-base leading-relaxed text-muted lg:col-span-6">
+            {copy.body}
+          </p>
+
+          <ul class="grid gap-3 lg:col-span-5 lg:col-start-8">
+            {copy.points.map((point) => (
+              <li class="flex items-start gap-3 border-t border-line pt-3 text-sm text-ink-soft">
+                <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span>
+                {point}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

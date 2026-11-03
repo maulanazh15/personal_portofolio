@@ -1,0 +1,41 @@
+{
+  "name": "portfolio-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "predev": "npm run sync:content",
+    "prebuild": "npm run sync:content",
+    "precheck": "npm run sync:content",
+    "sync:content": "node scripts/sync-content.mjs",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "astro": "astro",
+    "test": "npm run test:static",
+    "test:static": "node --test tests/static.test.mjs",
+    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=0 node tests/e2e.mjs",
+    "test:all": "npm run test:static && npm run test:e2e"
+  },
+  "dependencies": {
+    "@astrojs/preact": "^6.1.1",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.4.4",
+    "preact": "^11.1.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@tailwindcss/vite": "^4.3.3",
+    "cheerio": "^1.2.0",
+    "playwright": "^1.64.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3",
+    "yaml": "^2.9.1"
+  }
+}

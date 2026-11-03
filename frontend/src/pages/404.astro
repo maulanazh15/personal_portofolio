@@ -1,0 +1,46 @@
+---
+import ButtonLink from '@/components/ui/ButtonLink.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { routePaths } from '@/i18n/config';
+
+const title = 'Halaman tidak ditemukan';
+const description =
+  'Alamat yang dibuka tidak tersedia. Halaman mungkin sudah dipindahkan atau tautannya salah.';
+---
+
+<BaseLayout lang="id" title={title} description={description} noindex>
+  <div class="container-page flex min-h-[60vh] flex-col justify-center py-20 lg:py-28">
+    <p class="eyebrow">404</p>
+
+    <h1 class="mt-6 max-w-3xl text-[clamp(2.35rem,4.8vw,3.6rem)] font-semibold leading-[1.02] tracking-[-0.045em]">
+      {title}
+    </h1>
+
+    <p class="mt-6 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+      {description}
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-3">
+      <ButtonLink href={routePaths.home.id} arrow="right">Kembali ke beranda</ButtonLink>
+      <a
+        href={routePaths.home.en}
+        hreflang="en"
+        lang="en"
+        class="link-arrow px-2 text-muted hover:text-accent"
+      >
+        <span aria-hidden="true">English</span>
+        <span class="sr-only">Buka versi bahasa Inggris</span>
+      </a>
+    </div>
+
+    <nav class="mt-14 border-t border-line pt-8" aria-label="Tautan halaman">
+      <ul class="flex flex-wrap gap-x-6 gap-y-2">
+        <li><a href={routePaths.about.id} class="text-sm text-ink-soft hover:text-accent">Tentang</a></li>
+        <li><a href={routePaths.projects.id} class="text-sm text-ink-soft hover:text-accent">Proyek</a></li>
+        <li><a href={routePaths.expertise.id} class="text-sm text-ink-soft hover:text-accent">Keahlian</a></li>
+        <li><a href={routePaths.blog.id} class="text-sm text-ink-soft hover:text-accent">Blog</a></li>
+        <li><a href={routePaths.contact.id} class="text-sm text-ink-soft hover:text-accent">Kontak</a></li>
+      </ul>
+    </nav>
+  </div>
+</BaseLayout>

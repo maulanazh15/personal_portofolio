@@ -1,0 +1,110 @@
+---
+import ButtonLink from '@/components/ui/ButtonLink.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getAbout } from '@/i18n/about';
+import { routePaths, type Locale } from '@/i18n/config';
+import { getUI } from '@/i18n/ui';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const copy = getAbout(lang);
+const t = getUI(lang);
+const page = t.pages.about;
+---
+
+<BaseLayout lang={lang} routeKey="about" title={page.title} description={page.description}>
+  <PageHeader eyebrow={copy.eyebrow} title={copy.title} />
+
+  <div class="container-page pb-20 lg:pb-28">
+    <div class="grid gap-12 lg:grid-cols-12 lg:gap-16">
+      <div class="lg:col-span-7">
+        <div class="space-y-5 text-base leading-relaxed text-ink-soft">
+          {copy.intro.map((paragraph, index) => (
+            <p class:list={[index === 0 && 'text-lg font-medium text-ink']}>{paragraph}</p>
+          ))}
+        </div>
+
+        <div class="mt-12 border-t border-line pt-8">
+          <h2 class="font-display text-xl font-semibold tracking-[-0.025em]">
+            {copy.approachLabel}
+          </h2>
+          <p class="mt-3 text-base leading-relaxed text-muted">{copy.approach}</p>
+        </div>
+      </div>
+
+      <aside class="lg:col-span-4 lg:col-start-9">
+        <div class="surface-card p-6">
+          <dl class="space-y-4">
+            {copy.facts.map((fact) => (
+              <div class="flex items-baseline justify-between gap-4 border-b border-line pb-3 last:border-0 last:pb-0">
+                <dt class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+                  {fact.label}
+                </dt>
+                <dd class="text-right text-sm text-ink-soft">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div class="mt-5 rounded-card border border-line bg-surface p-6">
+          <h2 class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+            {copy.interestsLabel}
+          </h2>
+          <ul class="mt-4 flex flex-wrap gap-1.5">
+            {copy.interests.map((interest) => (
+              <li>
+                <span class="tag">{interest}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <section class="mt-16 border-t border-line pt-12">
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="surface-card p-7 sm:p-8">
+          <p class="eyebrow">{copy.educationLabel}</p>
+          <h2 class="mt-5 font-display text-xl font-semibold tracking-[-0.025em]">
+            {copy.education.degree}
+          </h2>
+          <p class="mt-1 text-sm text-muted">{copy.education.school}</p>
+          <p class="mt-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-faint">
+            {copy.education.yearLabel} · {copy.education.year}
+          </p>
+          <p class="mt-3 text-sm leading-relaxed text-muted">{copy.education.note}</p>
+        </div>
+
+        <div class="surface-card p-7 sm:p-8">
+          <p class="eyebrow">{copy.languageLabel}</p>
+          {copy.languages.map((language) => (
+            <div class="mt-5">
+              <h2 class="font-display text-xl font-semibold tracking-[-0.025em]">
+                {language.name}
+              </h2>
+              <p class="mt-1 text-sm text-muted">{language.test}</p>
+              <p class="mt-4 font-display text-3xl font-semibold tracking-[-0.03em] text-accent">
+                {language.score}
+              </p>
+              <p class="mt-2 text-xs leading-relaxed text-faint">{language.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <div class="mt-16 flex flex-col gap-5 rounded-panel border border-line bg-surface p-8 sm:flex-row sm:items-center sm:justify-between sm:p-10">
+      <div>
+        <h2 class="font-display text-2xl font-semibold tracking-[-0.03em]">{copy.ctaTitle}</h2>
+        <p class="mt-2 max-w-md text-sm leading-relaxed text-muted">{copy.ctaBody}</p>
+      </div>
+      <ButtonLink href={routePaths.projects[lang]} arrow="up-right">
+        {t.actions.viewAllProjects}
+      </ButtonLink>
+    </div>
+  </div>
+</BaseLayout>

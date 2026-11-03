@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Portfolio mark</title>
+  <rect width="64" height="64" rx="16" fill="#17191D" />
+  <path d="M20 43V21l24 22V21" fill="none" stroke="#FBFBFA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="51" cy="51" r="7" fill="#315EE8" stroke="#FBFBFA" stroke-width="3" />
+</svg>

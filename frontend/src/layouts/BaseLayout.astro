@@ -1,0 +1,157 @@
+---
+import { Font } from 'astro:assets';
+import Header from '@/components/layout/Header.astro';
+import Footer from '@/components/layout/Footer.astro';
+import { SITE } from '@/data/site';
+import {
+  defaultLocale,
+  getAlternatePaths,
+  localeMeta,
+  locales,
+  type Locale,
+  type RouteKey,
+} from '@/i18n/config';
+import { getUI } from '@/i18n/ui';
+import '@/styles/global.css';
+
+interface Props {
+  lang: Locale;
+  title: string;
+  description: string;
+  routeKey?: RouteKey;
+  alternatePaths?: Partial<Record<Locale, string>>;
+  noindex?: boolean;
+  ogType?: 'website' | 'article';
+  ogImage?: string;
+  ogImageAlt?: string;
+}
+
+const {
+  lang,
+  title,
+  description,
+  routeKey,
+  alternatePaths,
+  noindex = false,
+  ogType = 'website',
+  ogImage,
+  ogImageAlt,
+} = Astro.props;
+
+const t = getUI(lang);
+const locale = localeMeta[lang];
+const fullTitle = `${t.identity.name} — ${title}`;
+const canonical = new URL(Astro.url.pathname, SITE.url).href;
+
+const paths = alternatePaths ?? (routeKey ? getAlternatePaths(routeKey) : undefined);
+const alternateLinks = paths
+  ? locales
+      .map((alternateLocale) => {
+        const path = paths[alternateLocale];
+        return path
+          ? { locale: alternateLocale, href: new URL(path, SITE.url).href }
+          : null;
+      })
+      .filter((link): link is { locale: Locale; href: string } => link !== null)
+  : [];
+
+const defaultPath = paths?.[defaultLocale];
+const xDefaultHref = defaultPath ? new URL(defaultPath, SITE.url).href : null;
+
+const imagePath = ogImage ?? SITE.defaultOgImage;
+const imageUrl = imagePath ? new URL(imagePath, SITE.url).href : null;
+
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE.url}/#website`,
+      url: SITE.url,
+      name: t.identity.name,
+      inLanguage: locale.htmlLang,
+    },
+    {
+      '@type': 'WebPage',
+      '@id': `${canonical}#webpage`,
+      url: canonical,
+      name: fullTitle,
+      description,
+      inLanguage: locale.htmlLang,
+      isPartOf: { '@id': `${SITE.url}/#website` },
+    },
+  ],
+}).replace(/</g, '\\u003c');
+---
+
+<!doctype html>
+<html lang={locale.htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={t.identity.name} />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
+    <meta name="theme-color" content="#FBFBFA" />
+    <meta name="color-scheme" content="light" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${t.identity.name} — ${t.pages.blog.title}`}
+      href={new URL(`/${lang}/rss.xml`, SITE.url).href}
+    />
+    {alternateLinks.map((link) => (
+      <link
+        rel="alternate"
+        hreflang={localeMeta[link.locale].htmlLang}
+        href={link.href}
+      />
+    ))}
+    {xDefaultHref && <link rel="alternate" hreflang="x-default" href={xDefaultHref} />}
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={t.identity.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale.ogLocale} />
+    {alternateLinks
+      .filter((link) => link.locale !== lang)
+      .map((link) => (
+        <meta property="og:locale:alternate" content={localeMeta[link.locale].ogLocale} />
+      ))}
+    {imageUrl && <meta property="og:image" content={imageUrl} />}
+    {imageUrl && ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
+
+    <meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {imageUrl && <meta name="twitter:image" content={imageUrl} />}
+
+    <Font cssVariable="--font-inter" preload />
+    <Font cssVariable="--font-manrope" preload />
+
+    <script is:inline type="application/ld+json" set:html={jsonLd}></script>
+  </head>
+  <body class="flex min-h-screen flex-col bg-canvas">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+    >
+      {t.a11y.skipToContent}
+    </a>
+
+    <Header lang={lang} routeKey={routeKey} paths={paths} />
+
+    <main id="main-content" tabindex="-1" class="flex-1">
+      <slot />
+    </main>
+
+    <Footer lang={lang} />
+  </body>
+</html>

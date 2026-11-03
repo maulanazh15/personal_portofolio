@@ -1,0 +1,116 @@
+---
+import ArrowUpRight from '@/components/ui/ArrowUpRight.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getBlog } from '@/i18n/blog';
+import { localeMeta, type Locale } from '@/i18n/config';
+import { getUI } from '@/i18n/ui';
+import { getArticles, readingMinutes } from '@/lib/content';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const copy = getBlog(lang);
+const page = getUI(lang).pages.blog;
+const articles = await getArticles(lang);
+const [featured, ...rest] = articles;
+
+const dateFormat = new Intl.DateTimeFormat(localeMeta[lang].dateLocale, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+---
+
+<BaseLayout lang={lang} routeKey="blog" title={page.title} description={page.description}>
+  <PageHeader
+    eyebrow={copy.eyebrow}
+    title={copy.title}
+    description={copy.description}
+    meta={[copy.countLabel(articles.length)]}
+  />
+
+  <div class="container-page pb-20 lg:pb-28">
+    {featured && (
+      <a
+        href={featured.path}
+        class="surface-card group block p-7 transition-all duration-300 ease-soft hover:-translate-y-1 hover:border-line-strong hover:shadow-lift sm:p-10"
+      >
+        <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-accent">
+          <span>{featured.entry.data.category}</span>
+          <span class="text-line-strong" aria-hidden="true">·</span>
+          <time datetime={featured.entry.data.publishedAt.toISOString()} class="text-faint">
+            {dateFormat.format(featured.entry.data.publishedAt)}
+          </time>
+          <span class="text-line-strong" aria-hidden="true">·</span>
+          <span class="text-faint">{copy.minRead(readingMinutes(featured.entry.body))}</span>
+        </p>
+
+        <h2 class="mt-5 max-w-3xl font-display text-2xl font-semibold tracking-[-0.03em] transition-colors group-hover:text-accent sm:text-4xl">
+          {featured.entry.data.title}
+        </h2>
+        <p class="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft sm:text-base">
+          {featured.entry.data.description}
+        </p>
+
+        <div class="mt-7 flex flex-wrap items-center justify-between gap-4">
+          <ul class="flex flex-wrap gap-1.5">
+            {featured.entry.data.tags.map((tag) => (
+              <li>
+                <span class="tag">{tag}</span>
+              </li>
+            ))}
+          </ul>
+          <span class="link-arrow text-accent">
+            {copy.readArticle}
+            <ArrowUpRight />
+          </span>
+        </div>
+      </a>
+    )}
+
+    {rest.length > 0 && (
+      <ul class="mt-5 border-t border-line">
+        {rest.map(({ entry, path }) => (
+          <li class="border-b border-line">
+            <a href={path} class="group flex flex-col gap-3 py-7 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
+              <div>
+                <p class="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-faint">
+                  <span class="text-accent">{entry.data.category}</span>
+                  <span aria-hidden="true"> · </span>
+                  <time datetime={entry.data.publishedAt.toISOString()}>
+                    {dateFormat.format(entry.data.publishedAt)}
+                  </time>
+                </p>
+                <h2 class="mt-3 font-display text-2xl font-semibold tracking-[-0.03em] transition-colors group-hover:text-accent">
+                  {entry.data.title}
+                </h2>
+                <p class="mt-2 max-w-xl text-sm leading-relaxed text-muted">{entry.data.description}</p>
+              </div>
+              <span class="link-arrow shrink-0 text-accent">{copy.readArticle}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <section class="mt-16 rounded-panel border border-dashed border-line-strong bg-surface/60 p-7 sm:p-9">
+      <h2 class="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-faint">
+        {copy.forthcomingLabel}
+      </h2>
+      <ol class="mt-5 grid gap-3 sm:grid-cols-2">
+        {copy.forthcoming.map((topic, index) => (
+          <li class="flex items-start gap-3 text-sm leading-relaxed text-ink-soft">
+            <span class="font-mono text-[0.625rem] tabular-nums text-faint">0{index + 1}</span>
+            {topic}
+          </li>
+        ))}
+      </ol>
+      <p class="mt-6 border-t border-line pt-4 text-xs leading-relaxed text-muted">
+        {copy.forthcomingNote}
+      </p>
+    </section>
+  </div>
+</BaseLayout>

@@ -1,0 +1,107 @@
+---
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import MobileNav from './MobileNav.tsx';
+import ArrowUpRight from '@/components/ui/ArrowUpRight.astro';
+import LogoMark from '@/components/ui/LogoMark.astro';
+import {
+  localeMeta,
+  locales,
+  navOrder,
+  routePaths,
+  type Locale,
+  type RouteKey,
+} from '@/i18n/config';
+import { getUI } from '@/i18n/ui';
+
+interface Props {
+  lang: Locale;
+  routeKey?: RouteKey;
+  paths?: Partial<Record<Locale, string>>;
+}
+
+const { lang, routeKey, paths } = Astro.props;
+const t = getUI(lang);
+
+const navItems = navOrder.map((key) => ({
+  key,
+  label: t.nav[key],
+  href: routePaths[key][lang],
+  active: key === routeKey,
+}));
+
+const primaryItems = navItems.filter((item) => item.key !== 'contact');
+const contactHref = routePaths.contact[lang];
+
+const mobileItems = navItems.map(({ label, href, active }) => ({ label, href, active }));
+
+const languages = locales.map((locale) => ({
+  code: localeMeta[locale].htmlLang,
+  shortLabel: localeMeta[locale].shortLabel,
+  nativeName: localeMeta[locale].nativeName,
+  href: paths?.[locale] ?? routePaths[routeKey ?? 'home'][locale],
+  current: locale === lang,
+}));
+---
+
+<header class="sticky top-0 z-40 border-b border-line bg-canvas">
+  <div class="container-page flex h-[4.75rem] items-center justify-between gap-4">
+    <a href={routePaths.home[lang]} class="flex min-w-0 items-center gap-3">
+      <LogoMark class="h-9 w-9 shrink-0" />
+      <span class="min-w-0">
+        <span class="block truncate font-display text-[0.95rem] font-bold leading-tight tracking-[-0.02em]">
+          {t.identity.name}
+        </span>
+        <span class="mt-0.5 block truncate text-[0.5625rem] font-semibold uppercase tracking-[0.15em] text-muted">
+          {t.identity.role}
+        </span>
+      </span>
+    </a>
+
+    <nav aria-label={t.a11y.primaryNav} class="hidden items-center gap-7 lg:flex">
+      {primaryItems.map((item) => (
+        <a
+          href={item.href}
+          aria-current={item.active ? 'page' : undefined}
+          class="nav-link"
+        >
+          {item.label}
+          {item.active && (
+            <span class="h-1 w-1 rounded-full bg-accent" aria-hidden="true"></span>
+          )}
+        </a>
+      ))}
+    </nav>
+
+    <div class="hidden items-center gap-3 lg:flex">
+      <LanguageSwitcher lang={lang} routeKey={routeKey ?? 'home'} paths={paths} />
+      <a
+        href={contactHref}
+        class="btn btn-secondary min-h-9 gap-1.5 px-4 text-xs"
+        aria-current={routeKey === 'contact' ? 'page' : undefined}
+      >
+        {t.nav.contact}
+        <ArrowUpRight class="h-3.5 w-3.5" />
+      </a>
+    </div>
+
+    <div class="flex items-center gap-2 lg:hidden">
+      <LanguageSwitcher lang={lang} routeKey={routeKey ?? 'home'} paths={paths} />
+      <MobileNav
+        client:idle
+        brand={{
+          name: t.identity.name,
+          role: t.identity.role,
+          href: routePaths.home[lang],
+        }}
+        items={mobileItems}
+        languages={languages}
+        labels={{
+          open: t.a11y.openMenu,
+          close: t.a11y.closeMenu,
+          navigation: t.a11y.primaryNav,
+          language: t.a11y.languageSwitcher,
+        }}
+      />
+    </div>
+  </div>
+</header>

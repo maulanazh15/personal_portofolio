@@ -1,0 +1,159 @@
+---
+import { render } from 'astro:content';
+import ArrowRight from '@/components/ui/ArrowRight.astro';
+import ArrowUpRight from '@/components/ui/ArrowUpRight.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getBlog } from '@/i18n/blog';
+import {
+  articlePath,
+  getProjects,
+  getRelatedArticles,
+  projectPath,
+  readingMinutes,
+  type ArticleEntry,
+} from '@/lib/content';
+import { localeMeta, routePaths, type Locale } from '@/i18n/config';
+
+interface Props {
+  lang: Locale;
+  entry: ArticleEntry;
+  alternates: Record<Locale, string>;
+}
+
+const { lang, entry, alternates } = Astro.props;
+const copy = getBlog(lang);
+const { Content, headings } = await render(entry);
+const { data } = entry;
+
+const dateFormat = new Intl.DateTimeFormat(localeMeta[lang].dateLocale, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const related = await getRelatedArticles(entry, lang);
+const relatedProject = data.relatedProject
+  ? (await getProjects(lang)).find(
+      (project) => project.entry.data.translationKey === data.relatedProject,
+    )
+  : undefined;
+---
+
+<BaseLayout
+  lang={lang}
+  routeKey="blog"
+  alternatePaths={alternates}
+  title={data.title}
+  description={data.description}
+  ogType="article"
+>
+  <div class="container-page pt-10 sm:pt-14">
+    <a href={routePaths.blog[lang]} class="link-arrow text-muted hover:text-accent">
+      <span class="rotate-180"><ArrowRight /></span>
+      {copy.backToBlog}
+    </a>
+  </div>
+
+  <article>
+    <header class="container-page pb-10 pt-8 sm:pt-10">
+      <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.625rem] font-semibold uppercase tracking-[0.16em]">
+        <span class="text-accent">{data.category}</span>
+        <span class="text-line-strong" aria-hidden="true">·</span>
+        <time datetime={data.publishedAt.toISOString()} class="text-faint">
+          {copy.publishedLabel} {dateFormat.format(data.publishedAt)}
+        </time>
+        <span class="text-line-strong" aria-hidden="true">·</span>
+        <span class="text-faint">{copy.minRead(readingMinutes(entry.body))}</span>
+      </p>
+
+      <h1 class="mt-5 max-w-4xl text-[clamp(2.1rem,4.4vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.045em]">
+        {data.title}
+      </h1>
+
+      <p class="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
+        {data.description}
+      </p>
+
+      <ul class="mt-7 flex flex-wrap gap-1.5 border-t border-line pt-5">
+        {data.tags.map((tag) => (
+          <li>
+            <span class="tag">{tag}</span>
+          </li>
+        ))}
+      </ul>
+    </header>
+
+    <div class="container-page pb-20 lg:pb-28">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-16">
+        <div class="lg:col-span-8">
+          <div class="rich-text">
+            <Content />
+          </div>
+
+          {relatedProject && (
+            <aside class="mt-12 rounded-card border border-line bg-surface p-6">
+              <p class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+                {copy.relatedProjectLabel}
+              </p>
+              <a
+                href={projectPath(lang, relatedProject.slug)}
+                class="link-arrow mt-3 text-accent"
+              >
+                {relatedProject.entry.data.title}
+                <ArrowUpRight />
+              </a>
+            </aside>
+          )}
+        </div>
+
+        {toc.length > 0 && (
+          <aside class="lg:col-span-4 lg:col-start-9">
+            <nav aria-label={copy.tocLabel} class="lg:sticky lg:top-28">
+              <p class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+                {copy.tocLabel}
+              </p>
+              <ol class="mt-4 space-y-2.5 border-l border-line pl-4">
+                {toc.map((heading) => (
+                  <li class:list={[heading.depth === 3 && 'pl-3']}>
+                    <a
+                      href={`#${heading.slug}`}
+                      class="text-sm text-muted transition-colors hover:text-accent"
+                    >
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          </aside>
+        )}
+      </div>
+
+      {related.length > 0 && (
+        <section class="mt-16 border-t border-line pt-8">
+          <h2 class="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-faint">
+            {copy.relatedLabel}
+          </h2>
+          <ul class="mt-5 grid gap-4 sm:grid-cols-2">
+            {related.map(({ entry: relatedEntry, slug }) => (
+              <li>
+                <a
+                  href={articlePath(lang, slug)}
+                  class="surface-card group block p-5 transition-all duration-300 ease-soft hover:-translate-y-1 hover:border-line-strong hover:shadow-lift"
+                >
+                  <p class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-accent">
+                    {relatedEntry.data.category}
+                  </p>
+                  <p class="mt-2 font-display text-lg font-semibold tracking-[-0.02em]">
+                    {relatedEntry.data.title}
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  </article>
+</BaseLayout>

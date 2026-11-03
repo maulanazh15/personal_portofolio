@@ -1,0 +1,16 @@
+---
+import ProjectPage from '@/components/pages/ProjectPage.astro';
+import type { Locale } from '@/i18n/config';
+import { projectStaticPaths, type ProjectEntry } from '@/lib/content';
+
+export const getStaticPaths = () => projectStaticPaths('id');
+
+interface Props {
+  entry: ProjectEntry;
+  alternates: Record<Locale, string>;
+}
+
+const { entry, alternates } = Astro.props;
+---
+
+<ProjectPage lang="id" entry={entry} alternates={alternates} />

@@ -1,0 +1,201 @@
+---
+import { render } from 'astro:content';
+import ArrowRight from '@/components/ui/ArrowRight.astro';
+import ArrowUpRight from '@/components/ui/ArrowUpRight.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { routePaths, type Locale } from '@/i18n/config';
+import { getProjectsMessages } from '@/i18n/projects';
+import { getUI } from '@/i18n/ui';
+import { getProjects, projectPath, slugOf, type ProjectEntry } from '@/lib/content';
+
+interface Props {
+  lang: Locale;
+  entry: ProjectEntry;
+  alternates: Record<Locale, string>;
+}
+
+const { lang, entry, alternates } = Astro.props;
+const labels = getProjectsMessages(lang);
+const t = getUI(lang);
+const { Content } = await render(entry);
+
+const { data } = entry;
+
+const sections: { label: string; body?: string; items?: string[] }[] = [
+  { label: labels.backgroundLabel, body: data.background },
+  { label: labels.objectivesLabel, items: data.objectives },
+  { label: labels.areasLabel, items: data.areas },
+  { label: labels.roleLabel, body: data.role },
+  { label: labels.processLabel, body: data.process },
+  { label: labels.challengesLabel, body: data.challenges },
+  { label: labels.resultsLabel, body: data.results },
+  { label: labels.outcomesLabel, body: data.outcomes },
+].filter((section) => Boolean(section.body) || Boolean(section.items?.length));
+
+const others = (await getProjects(lang)).filter((project) => project.slug !== slugOf(entry.id));
+const nextProject = others[0];
+
+const title = data.title;
+const description = data.summary;
+---
+
+<BaseLayout
+  lang={lang}
+  routeKey="projects"
+  alternatePaths={alternates}
+  title={title}
+  description={description}
+  ogType="article"
+>
+  <div class="container-page pt-10 sm:pt-14">
+    <a href={routePaths.projects[lang]} class="link-arrow text-muted hover:text-accent">
+      <span class="rotate-180"><ArrowRight /></span>
+      {labels.backToProjects}
+    </a>
+  </div>
+
+  <article>
+    <header class="container-page pb-12 pt-8 sm:pt-10">
+      <p class="flex flex-wrap items-center gap-2 text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-accent">
+        <span>{data.category}</span>
+        <span class="text-line-strong" aria-hidden="true">/</span>
+        <span class="text-faint">{data.focus}</span>
+      </p>
+
+      <h1 class="mt-5 max-w-4xl text-[clamp(2.2rem,4.6vw,3.4rem)] font-semibold leading-[1.04] tracking-[-0.045em]">
+        {data.title}
+      </h1>
+
+      {data.subtitle && (
+        <p class="mt-4 max-w-2xl text-lg text-muted">{data.subtitle}</p>
+      )}
+
+      <p class="mt-5 max-w-3xl border-t border-line pt-5 text-base leading-relaxed text-ink-soft">
+        {data.summary}
+      </p>
+    </header>
+
+    <div class="container-page pb-20 lg:pb-28">
+      <div class="grid gap-12 lg:grid-cols-12 lg:gap-16">
+        <div class="lg:col-span-8">
+          {data.overview && (
+            <section>
+              <h2 class="font-display text-xl font-semibold tracking-[-0.025em]">
+                {labels.overviewLabel}
+              </h2>
+              <p class="mt-3 text-base leading-relaxed text-ink-soft">{data.overview}</p>
+            </section>
+          )}
+
+          <div class="rich-text mt-4">
+            <Content />
+          </div>
+
+          {sections.map((section) => (
+            <section class="mt-10 border-t border-line pt-8">
+              <h2 class="font-display text-xl font-semibold tracking-[-0.025em]">
+                {section.label}
+              </h2>
+
+              {section.body && (
+                <p class="mt-3 text-base leading-relaxed text-ink-soft">{section.body}</p>
+              )}
+
+              {section.items && section.items.length > 0 && (
+                <ul class="mt-4 space-y-2">
+                  {section.items.map((item) => (
+                    <li class="flex items-start gap-3 text-sm leading-relaxed text-ink-soft">
+                      <span class="mt-[0.55rem] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true"></span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          ))}
+        </div>
+
+        <aside class="lg:col-span-4 lg:col-start-9">
+          <div class="lg:sticky lg:top-28 space-y-5">
+            <div class="surface-card p-6">
+              <dl class="space-y-5">
+                <div>
+                  <dt class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+                    {labels.statusLabel}
+                  </dt>
+                  <dd class="mt-1.5 text-sm text-ink-soft">{data.status}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+                    {labels.stackLabel}
+                  </dt>
+                  <dd class="mt-2">
+                    <ul class="flex flex-wrap gap-1.5">
+                      {data.stack.map((item) => (
+                        <li>
+                          <span class="tag">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+                    {labels.linksLabel}
+                  </dt>
+                  <dd class="mt-2 text-sm">
+                    {data.repo ? (
+                      <a
+                        href={data.repo}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="link-arrow text-accent"
+                      >
+                        {labels.repoLabel} · GitHub
+                        <ArrowUpRight />
+                      </a>
+                    ) : (
+                      <p class="text-muted">{data.docsPending ? labels.docsPending : labels.noLink}</p>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="rounded-card border border-line bg-surface p-6">
+              <p class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+                {t.actions.contactMe}
+              </p>
+              <p class="mt-2 text-sm leading-relaxed text-muted">{labels.ctaBody}</p>
+              <a href={routePaths.contact[lang]} class="link-arrow mt-4 text-accent">
+                {t.actions.startConversation}
+                <ArrowUpRight />
+              </a>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {nextProject && (
+        <nav class="mt-16 border-t border-line pt-8" aria-label={labels.nextProject}>
+          <a href={projectPath(lang, nextProject.slug)} class="group flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p class="text-[0.625rem] font-semibold uppercase tracking-[0.14em] text-faint">
+                {labels.nextProject}
+              </p>
+              <p class="mt-2 font-display text-2xl font-semibold tracking-[-0.03em] transition-colors group-hover:text-accent">
+                {nextProject.entry.data.title}
+              </p>
+            </div>
+            <span class="link-arrow text-accent">
+              {labels.viewProject}
+              <ArrowUpRight />
+            </span>
+          </a>
+        </nav>
+      )}
+    </div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,74 @@
+---
+import LogoMark from '@/components/ui/LogoMark.astro';
+import { navOrder, routePaths, type Locale } from '@/i18n/config';
+import { getUI } from '@/i18n/ui';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = getUI(lang);
+const year = new Date().getFullYear();
+const homeHref = routePaths.home[lang];
+---
+
+<footer class="border-t border-line bg-canvas">
+  <div class="container-page py-14 sm:py-16">
+    <div class="grid gap-10 md:grid-cols-12">
+      <div class="md:col-span-5">
+        <a href={homeHref} class="inline-flex items-center gap-3">
+          <LogoMark class="h-9 w-9" />
+          <span>
+            <span class="block font-display text-sm font-bold tracking-[-0.02em]">
+              {t.identity.name}
+            </span>
+            <span class="mt-0.5 block text-[0.5625rem] font-semibold uppercase tracking-[0.15em] text-muted">
+              {t.identity.role}
+            </span>
+          </span>
+        </a>
+        <p class="mt-5 max-w-sm text-sm leading-relaxed text-muted">
+          {t.footer.description}
+        </p>
+      </div>
+
+      <div class="md:col-span-3 md:col-start-7">
+        <p class="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-muted">
+          {t.footer.navigation}
+        </p>
+        <ul class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2.5 md:grid-cols-1">
+          {navOrder.map((key) => (
+            <li>
+              <a
+                href={routePaths[key][lang]}
+                class="text-sm text-ink-soft transition-colors hover:text-accent"
+              >
+                {t.nav[key]}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="md:col-span-3">
+        <p class="text-[0.625rem] font-semibold uppercase tracking-[0.16em] text-muted">
+          {t.footer.focus}
+        </p>
+        <ul class="mt-4 space-y-2.5">
+          {t.footer.focusItems.map((item) => (
+            <li class="flex items-start gap-2 text-sm text-ink-soft">
+              <span class="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-accent"></span>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+      <p>© {year} {t.identity.name}. {t.footer.rights}</p>
+      <p>{t.footer.builtWith}</p>
+    </div>
+  </div>
+</footer>

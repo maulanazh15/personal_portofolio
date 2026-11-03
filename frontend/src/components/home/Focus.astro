@@ -1,0 +1,55 @@
+---
+import FocusIcon from '@/components/ui/FocusIcon.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { getExpertise } from '@/i18n/expertise';
+import { getHome } from '@/i18n/home';
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const copy = getHome(lang).focus;
+const { groups } = getExpertise(lang);
+---
+
+<section class="section">
+  <div class="container-page">
+    <SectionHeading
+      eyebrow={copy.eyebrow}
+      title={copy.title}
+      description={copy.description}
+    />
+
+    <div class="mt-12 grid gap-5 sm:grid-cols-2">
+      {groups.map((group, index) => (
+        <article class="surface-card card-hover flex flex-col p-6 sm:p-7">
+          <div class="flex items-start justify-between gap-4">
+            <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+              <FocusIcon name={group.icon} />
+            </span>
+            <span class="text-[0.625rem] font-semibold tracking-[0.16em] text-faint">
+              0{index + 1}
+            </span>
+          </div>
+
+          <h3 class="mt-7 font-display text-xl font-semibold tracking-[-0.025em]">
+            {group.title}
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed text-muted">{group.description}</p>
+
+          <ul class="mt-auto flex flex-wrap gap-1.5 pt-6">
+            {(group.technologies.length > 0 ? group.technologies : group.items)
+              .slice(0, 6)
+              .map((tag) => (
+                <li>
+                  <span class="tag">{tag}</span>
+                </li>
+              ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

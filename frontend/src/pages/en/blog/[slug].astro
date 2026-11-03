@@ -1,0 +1,16 @@
+---
+import ArticlePage from '@/components/pages/ArticlePage.astro';
+import type { Locale } from '@/i18n/config';
+import { articleStaticPaths, type ArticleEntry } from '@/lib/content';
+
+export const getStaticPaths = () => articleStaticPaths('en');
+
+interface Props {
+  entry: ArticleEntry;
+  alternates: Record<Locale, string>;
+}
+
+const { entry, alternates } = Astro.props;
+---
+
+<ArticlePage lang="en" entry={entry} alternates={alternates} />

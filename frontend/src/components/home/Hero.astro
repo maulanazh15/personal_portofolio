@@ -1,0 +1,56 @@
+---
+import ArchitectureCard from './ArchitectureCard.astro';
+import ButtonLink from '@/components/ui/ButtonLink.astro';
+import { getHome } from '@/i18n/home';
+import { routePaths, type Locale } from '@/i18n/config';
+import { getUI } from '@/i18n/ui';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = getUI(lang);
+const copy = getHome(lang);
+---
+
+<section class="relative overflow-hidden">
+  <div class="hero-glow absolute inset-0" aria-hidden="true"></div>
+
+  <div class="container-page relative grid items-center gap-14 pb-20 pt-16 sm:pb-24 sm:pt-20 lg:grid-cols-12 lg:gap-12 lg:pb-28 lg:pt-24">
+    <div class="hero-rise lg:col-span-7">
+      <p class="eyebrow">{copy.hero.eyebrow}</p>
+
+      <h1 class="mt-6 max-w-3xl text-[clamp(2.6rem,5.4vw,4.15rem)] font-semibold leading-[0.99] tracking-[-0.05em]">
+        <span class="block">{copy.hero.titleLead}</span>
+        <span class="block text-accent">{copy.hero.titleAccent}</span>
+      </h1>
+
+      <p class="mt-7 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+        {copy.hero.description}
+      </p>
+
+      <div class="mt-9 flex flex-wrap gap-3">
+        <ButtonLink href={routePaths.projects[lang]} arrow="up-right">
+          {t.actions.exploreProjects}
+        </ButtonLink>
+        <ButtonLink href={routePaths.contact[lang]} variant="secondary" arrow="right">
+          {t.actions.contactMe}
+        </ButtonLink>
+      </div>
+
+      <ul class="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-5 text-[0.625rem] font-semibold uppercase tracking-[0.15em] text-faint">
+        {copy.hero.meta.map((item) => (
+          <li class="flex items-center gap-2">
+            <span class="h-1 w-1 rounded-full bg-line-strong" aria-hidden="true"></span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="hero-rise-late lg:col-span-5">
+      <ArchitectureCard lang={lang} />
+    </div>
+  </div>
+</section>

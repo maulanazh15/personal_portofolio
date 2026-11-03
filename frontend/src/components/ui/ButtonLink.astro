@@ -1,0 +1,33 @@
+---
+import ArrowRight from './ArrowRight.astro';
+import ArrowUpRight from './ArrowUpRight.astro';
+
+interface Props {
+  href: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  arrow?: 'right' | 'up-right' | false;
+  class?: string;
+  target?: string;
+  rel?: string;
+}
+
+const {
+  href,
+  variant = 'primary',
+  arrow = false,
+  class: className,
+  target,
+  rel,
+} = Astro.props;
+---
+
+<a
+  href={href}
+  target={target}
+  rel={rel ?? (target === '_blank' ? 'noopener noreferrer' : undefined)}
+  class:list={['btn', `btn-${variant}`, className]}
+>
+  <slot />
+  {arrow === 'right' && <ArrowRight />}
+  {arrow === 'up-right' && <ArrowUpRight />}
+</a>

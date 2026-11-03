@@ -1,0 +1,27 @@
+---
+import Approach from '@/components/home/Approach.astro';
+import ContactCta from '@/components/home/ContactCta.astro';
+import FeaturedProjects from '@/components/home/FeaturedProjects.astro';
+import Focus from '@/components/home/Focus.astro';
+import Hero from '@/components/home/Hero.astro';
+import LatestArticles from '@/components/home/LatestArticles.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import type { Locale } from '@/i18n/config';
+import { getUI } from '@/i18n/ui';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const page = getUI(lang).pages.home;
+---
+
+<BaseLayout lang={lang} routeKey="home" title={page.title} description={page.description}>
+  <Hero lang={lang} />
+  <Approach lang={lang} />
+  <Focus lang={lang} />
+  <FeaturedProjects lang={lang} />
+  <LatestArticles lang={lang} />
+  <ContactCta lang={lang} />
+</BaseLayout>
