@@ -47,7 +47,7 @@ jobs:
           PORTFOLIO_ADDR=127.0.0.1:8099 \
           PORTFOLIO_DB=/tmp/portfolio-data/portfolio.db \
           PORTFOLIO_ADMIN_TOKEN=ci-only \
-          ./portfolio-api &
+          go run ./cmd/server > /tmp/portfolio-api.log 2>&1 &
           for attempt in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8099/healthz >/dev/null; then
               break
