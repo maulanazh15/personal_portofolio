@@ -71,27 +71,48 @@ jobs:
           mkdir -p /tmp/portfolio-deploy
           cp portfolio-dist.tar.gz portfolio-seed.tar.gz portfolio-api portfolio-import deploy/scripts/remote-deploy.sh /tmp/portfolio-deploy/
 
+      - name: Check deployment secrets
+        id: deploy_config
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          if [ -n "$SSH_HOST" ] && [ -n "$SSH_USER" ] && [ -n "$SSH_PRIVATE_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "SSH deployment secrets are not configured; build-only run."
+          fi
+
       - name: Configure SSH
-        if: ${{ secrets.SSH_HOST != '' && secrets.SSH_USER != '' && secrets.SSH_PRIVATE_KEY != '' }}
+        if: steps.deploy_config.outputs.enabled == 'true'
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "${{ secrets.SSH_PORT || 22 }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
       - name: Deploy
-        if: ${{ secrets.SSH_HOST != '' && secrets.SSH_USER != '' && secrets.SSH_PRIVATE_KEY != '' }}
+        if: steps.deploy_config.outputs.enabled == 'true'
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
           PORT="${SSH_PORT:-22}"
-          scp -i ~/.ssh/deploy_key -P "$PORT" -r /tmp/portfolio-deploy "$SSH_USER@$SSH_HOST:/tmp/"
-          ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" 'sh /tmp/portfolio-deploy/remote-deploy.sh'
+          REMOTE_DIR='$PREFIX/tmp/portfolio-deploy'
+          tar -czf - -C /tmp/portfolio-deploy . | ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" \
+            "rm -rf $REMOTE_DIR && mkdir -p $REMOTE_DIR && tar -xzf - -C $REMOTE_DIR"
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$SSH_USER@$SSH_HOST" \
+            "SVDIR=\$PREFIX/var/service sh $REMOTE_DIR/remote-deploy.sh"
 
       - name: Smoke test
-        if: ${{ secrets.SSH_HOST != '' && secrets.SSH_USER != '' && secrets.SSH_PRIVATE_KEY != '' }}
+        if: steps.deploy_config.outputs.enabled == 'true'
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
