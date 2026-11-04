@@ -45,7 +45,7 @@ Do not swap frameworks or add a second CMS without explicit approval. Pages CMS 
 │   │   └── styles/      Tailwind theme + global styles
 │   └── astro.config.mjs
 ├── content/             Markdown seed for the importer (backup; not read by builds)
-├── backend/             Go content API + SQLite (cmd/, internal/, data/ gitignored)
+├── backend/             Go content API + SQLite + embedded localhost admin UI (cmd/, internal/, data/ gitignored)
 ├── deploy/              Nginx/runit artifacts (Phase 7)
 └── .github/workflows/   CI/CD (Phase 7)
 ```
@@ -73,7 +73,7 @@ The frontend expects the content API on `http://127.0.0.1:8080` (override with
 ```bash
 cd backend
 go run ./cmd/import -db data/portfolio.db -dir ../content   # seed, idempotent
-PORTFOLIO_ADMIN_TOKEN=... go run ./cmd/server               # localhost API
+PORTFOLIO_ADMIN_TOKEN=... go run ./cmd/server               # localhost API + /admin/ browser UI
 gofmt -l . && go vet ./... && go test ./...
 GOOS=linux GOARCH=arm GOARM=7 go build ./...                # target compile check
 ```

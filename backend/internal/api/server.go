@@ -4,6 +4,7 @@ package api
 
 import (
 	"crypto/subtle"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,6 +19,9 @@ import (
 )
 
 const maxBodyBytes = 1 << 20 // 1 MiB is generous for a Markdown document
+
+//go:embed admin/*
+var adminFiles embed.FS
 
 // Config controls the HTTP surface.
 type Config struct {
@@ -63,6 +67,10 @@ func New(store *content.Store, cfg Config) *Server {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	server.mux.HandleFunc("/api/v1/contact", server.handleContactRoute)
+	server.mux.HandleFunc("GET /admin", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/admin/", http.StatusTemporaryRedirect)
+	})
+	server.mux.HandleFunc("GET /admin/", server.handleAdminUI)
 
 	for _, kind := range []content.Kind{content.KindProject, content.KindArticle} {
 		server.mux.HandleFunc("GET /api/v1/"+kind.Path(), server.handleList(kind, false))
@@ -103,6 +111,39 @@ func (s *Server) Handler() http.Handler {
 
 		s.mux.ServeHTTP(w, r)
 	})
+}
+
+// handleAdminUI serves the dependency-free browser client. The HTML is public,
+// but every content request made by the client still requires the bearer token.
+func (s *Server) handleAdminUI(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+	w.Header().Set("X-Frame-Options", "DENY")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+
+	name := strings.TrimPrefix(r.URL.Path, "/admin/")
+	if name == "" {
+		name = "index.html"
+	}
+	contentTypes := map[string]string{
+		"index.html": "text/html; charset=utf-8",
+		"admin.css":  "text/css; charset=utf-8",
+		"admin.js":   "text/javascript; charset=utf-8",
+	}
+	contentType, ok := contentTypes[name]
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	asset, err := adminFiles.ReadFile("admin/" + name)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "could not read admin asset")
+		return
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(asset); err != nil {
+		log.Printf("write admin asset: %v", err)
+	}
 }
 
 func (s *Server) handleList(kind content.Kind, includeDrafts bool) http.HandlerFunc {

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Portfolio content admin</title>
+  <link rel="stylesheet" href="/admin/admin.css">
+  <script src="/admin/admin.js" defer></script>
+</head>
+<body>
+  <main class="page-shell">
+    <section id="login-panel" class="login-card" aria-labelledby="login-title">
+      <p class="eyebrow">Local administration</p>
+      <h1 id="login-title">Portfolio content</h1>
+      <p>Enter the admin token from <code>PORTFOLIO_ADMIN_TOKEN</code> to manage projects and blog articles.</p>
+      <form id="login-form">
+        <label for="token-input">Admin token</label>
+        <input id="token-input" name="token" type="password" autocomplete="off" spellcheck="false" required>
+        <button id="login-button" class="button button-primary" type="submit">Sign in</button>
+      </form>
+      <p id="login-status" class="form-status" role="status" aria-live="polite"></p>
+      <p class="security-note">The token is kept only in this browser tab’s session storage. This interface is intended for localhost access.</p>
+    </section>
+
+    <div id="workspace" hidden>
+      <header class="workspace-header">
+        <div>
+          <p class="eyebrow">Content administration</p>
+          <h1>Portfolio content</h1>
+        </div>
+        <button id="logout-button" class="button button-secondary" type="button">Sign out</button>
+      </header>
+
+      <p class="publish-note"><strong>Static site:</strong> saved changes appear publicly after the next frontend build and deployment.</p>
+
+      <div class="toolbar" aria-label="Content controls">
+        <div class="kind-switch" aria-label="Collection">
+          <button type="button" class="button kind-button" data-kind="projects" aria-pressed="true">Projects</button>
+          <button type="button" class="button kind-button" data-kind="articles" aria-pressed="false">Blog articles</button>
+        </div>
+        <div class="toolbar-actions">
+          <label class="locale-label" for="locale-filter">Language
+            <select id="locale-filter">
+              <option value="id">Indonesian (id)</option>
+              <option value="en">English (en)</option>
+            </select>
+          </label>
+          <button id="refresh-button" class="button button-secondary" type="button">Refresh</button>
+          <button id="create-button" class="button button-primary" type="button">New project</button>
+        </div>
+      </div>
+
+      <p id="list-status" class="form-status" role="status" aria-live="polite"></p>
+      <section id="entry-list" class="entry-list" aria-label="Content entries"></section>
+    </div>
+  </main>
+
+  <dialog id="editor-dialog" aria-labelledby="editor-title">
+    <form id="entry-form" class="editor-form">
+      <header class="editor-header">
+        <div>
+          <p id="editor-kicker" class="eyebrow"></p>
+          <h2 id="editor-title">Edit content</h2>
+        </div>
+        <button id="close-editor-button" class="button button-secondary" type="button">Close</button>
+      </header>
+
+      <div class="routing-fields">
+        <div class="field">
+          <label for="entry-locale">Language</label>
+          <select id="entry-locale" required>
+            <option value="id">Indonesian (id)</option>
+            <option value="en">English (en)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="entry-slug">Slug</label>
+          <input id="entry-slug" type="text" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required>
+          <small>Lowercase letters, numbers, and hyphens. Cannot be changed after creation.</small>
+        </div>
+        <div class="field field-wide">
+          <label for="entry-translation-key">Translation key</label>
+          <input id="entry-translation-key" type="text" required>
+          <small>Use the same key for the Indonesian and English versions.</small>
+        </div>
+      </div>
+
+      <div id="entry-fields" class="form-grid"></div>
+
+      <div class="field field-wide body-field">
+        <label for="entry-body">Markdown body</label>
+        <textarea id="entry-body" rows="14" spellcheck="true"></textarea>
+      </div>
+
+      <p id="editor-status" class="form-status" role="alert" aria-live="assertive"></p>
+      <footer class="editor-actions">
+        <button id="cancel-editor-button" class="button button-secondary" type="button">Cancel</button>
+        <button id="save-button" class="button button-primary" type="submit">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

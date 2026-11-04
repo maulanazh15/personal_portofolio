@@ -15,6 +15,7 @@ cmd/server/          HTTP server
 cmd/import/          Markdown → SQLite importer (idempotent)
 internal/content/    Content/contact models, validation, Markdown, SQLite store
 internal/api/        HTTP handlers, bearer auth, CORS, rate limiting
+internal/api/admin/  Embedded browser admin UI (HTML/CSS/vanilla JS)
 data/                SQLite database (gitignored, created on demand)
 ```
 
@@ -27,12 +28,31 @@ go run ./cmd/import -db data/portfolio.db -dir ../content
 # Start the API on localhost
 PORTFOLIO_ADMIN_TOKEN=change-me go run ./cmd/server
 
+# Open the browser admin UI to create, edit, and delete localized content
+# URL: http://127.0.0.1:8080/admin/
+
 # In another terminal: build the frontend from the API
 cd ../frontend && npm run build
 ```
 
 Without `PORTFOLIO_ADMIN_TOKEN` the read API works but every admin endpoint
 answers `503 admin API is disabled`.
+
+## Browser admin UI
+
+Open `http://127.0.0.1:8080/admin/` and enter the configured admin token. The UI
+supports the complete project and article lifecycle for both locales: list,
+create, read/edit, and delete. It includes every frontmatter field, Markdown
+bodies, article drafts, and delete confirmation. The token is held in tab-scoped
+`sessionStorage`, never in the URL or persistent local storage.
+
+The UI is embedded in the Go binary and uses only same-origin HTML, CSS, and
+JavaScript; it adds no runtime dependencies to the static frontend. Keep it on
+localhost. For remote administration, use an SSH local port forward rather than
+exposing `/admin/` or `/api/v1/admin/` through Nginx or the tunnel.
+
+Content changes are saved immediately in SQLite, but the public site changes
+only after `cd ../frontend && npm run build` and deployment.
 
 ## Configuration
 
@@ -58,6 +78,7 @@ frontmatter object the frontend expects and `body` is Markdown.
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
 | GET | `/healthz` | none | Liveness probe. |
+| GET | `/admin/` | none | Local browser UI; all content API calls still require bearer auth. |
 | POST | `/api/v1/contact` | public | Validate and store a contact message. |
 | OPTIONS | `/api/v1/contact` | public | CORS preflight for allowed browser origins. |
 | GET | `/api/v1/projects?locale=id` | none | Projects sorted by `order`. |
@@ -144,8 +165,8 @@ direct peer is loopback, preventing clients from spoofing rate-limit identity.
 
 ## Security
 
-- Binds to `127.0.0.1` by default; do not expose the admin API through the
-  tunnel or Nginx. Admin endpoints are for local use (curl, scripts).
+- Binds to `127.0.0.1` by default; do not expose `/admin/` or the admin API
+  through the tunnel or Nginx. They are for local browser, curl, and script use.
 - Bearer token compared in constant time; tokens come from the environment and
   are never logged or committed.
 - 120 requests/minute per client globally; contact submissions additionally
