@@ -1,9 +1,13 @@
 #!/data/data/com.termux/files/usr/bin/sh
 set -eu
 
+PREFIX=${PREFIX:-/data/data/com.termux/files/usr}
 BASE=/data/data/com.termux/files/home/homelab
 APP="$BASE/apps/portfolio"
-DEPLOY=/tmp/portfolio-deploy
+# Termux has no /tmp; stage under the prefix unless the caller overrides it.
+DEPLOY=${DEPLOY:-"$PREFIX/tmp/portfolio-deploy"}
+SVDIR=${SVDIR:-"$PREFIX/var/service"}
+export SVDIR
 
 mkdir -p "$BASE/sites/portfolio" "$APP/data" "$APP/seed" "$BASE/logs"
 
