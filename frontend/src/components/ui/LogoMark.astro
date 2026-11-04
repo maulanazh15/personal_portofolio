@@ -13,12 +13,17 @@ const { class: className } = Astro.props;
   aria-hidden="true"
   focusable="false"
 >
-  <rect width="32" height="32" rx="9" class="fill-ink"></rect>
+  <rect width="32" height="32" rx="9" class="fill-inverse"></rect>
   <path
     d="M9.75 21.5V10.5L22.25 21.5V10.5"
-    stroke="#FBFBFA"
+    class="stroke-on-inverse"
     stroke-width="2"
     stroke-linecap="round"
     stroke-linejoin="round"></path>
-  <circle cx="25.5" cy="25.5" r="4" fill="#315EE8" stroke="#FBFBFA" stroke-width="1.5"></circle>
+  <circle
+    cx="25.5"
+    cy="25.5"
+    r="4"
+    class="fill-accent-solid stroke-on-inverse"
+    stroke-width="1.5"></circle>
 </svg>

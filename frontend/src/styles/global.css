@@ -1,35 +1,100 @@
 @import "tailwindcss";
 
+/* `data-theme` is set on <html> before first paint by BaseLayout. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme inline {
   --font-sans: var(--font-inter);
   --font-display: var(--font-manrope);
+
+  --color-canvas: var(--palette-canvas);
+  --color-surface: var(--palette-surface);
+  --color-ink: var(--palette-ink);
+  --color-ink-soft: var(--palette-ink-soft);
+  --color-muted: var(--palette-muted);
+  --color-faint: var(--palette-faint);
+  --color-line: var(--palette-line);
+  --color-line-strong: var(--palette-line-strong);
+  --color-accent: var(--palette-accent);
+  --color-accent-strong: var(--palette-accent-strong);
+  --color-accent-soft: var(--palette-accent-soft);
+  --color-accent-ink: var(--palette-accent-ink);
+  --color-accent-solid: var(--palette-accent-solid);
+  --color-on-accent: var(--palette-on-accent);
+  --color-on-ink: var(--palette-on-ink);
+  --color-inverse: var(--palette-inverse);
+  --color-on-inverse: var(--palette-on-inverse);
+
+  --shadow-card: var(--palette-shadow-card);
+  --shadow-lift: var(--palette-shadow-lift);
 }
 
 @theme {
-  --color-canvas: #fbfbfa;
-  --color-surface: #ffffff;
-  --color-ink: #17191d;
-  --color-ink-soft: #3d434d;
-  --color-muted: #69717d;
-  --color-faint: #8b929c;
-  --color-line: #e7e9ed;
-  --color-line-strong: #d5d9e0;
-  --color-accent: #315ee8;
-  --color-accent-strong: #2449c4;
-  --color-accent-soft: #edf2ff;
-  --color-accent-ink: #1d3ca8;
-
   --radius-card: 1.5rem;
   --radius-panel: 2rem;
-
-  --shadow-card: 0 1px 2px rgb(23 25 29 / 0.04), 0 16px 40px -28px rgb(23 25 29 / 0.22);
-  --shadow-lift: 0 2px 4px rgb(23 25 29 / 0.05), 0 28px 64px -36px rgb(23 25 29 / 0.28);
 
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/**
+ * Theme palette. Semantic tokens above resolve to these variables, so a single
+ * `data-theme` switch re-themes every utility without duplicating classes.
+ */
+:root {
+  color-scheme: light;
+
+  --palette-canvas: #fbfbfa;
+  --palette-surface: #ffffff;
+  --palette-ink: #17191d;
+  --palette-ink-soft: #3d434d;
+  --palette-muted: #69717d;
+  --palette-faint: #8b929c;
+  --palette-line: #e7e9ed;
+  --palette-line-strong: #d5d9e0;
+  --palette-accent: #315ee8;
+  --palette-accent-strong: #2449c4;
+  --palette-accent-soft: #edf2ff;
+  --palette-accent-ink: #1d3ca8;
+  --palette-accent-solid: #315ee8;
+  --palette-on-accent: #ffffff;
+  --palette-on-ink: #fbfbfa;
+  --palette-inverse: #17191d;
+  --palette-on-inverse: #fbfbfa;
+
+  --palette-grid-line: rgb(23 25 29 / 0.04);
+  --palette-shadow-card: 0 1px 2px rgb(23 25 29 / 0.04), 0 16px 40px -28px rgb(23 25 29 / 0.22);
+  --palette-shadow-lift: 0 2px 4px rgb(23 25 29 / 0.05), 0 28px 64px -36px rgb(23 25 29 / 0.28);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --palette-canvas: #0e1116;
+  --palette-surface: #151a22;
+  --palette-ink: #f3f5f9;
+  --palette-ink-soft: #c7cedb;
+  --palette-muted: #9aa4b5;
+  --palette-faint: #7f8a9c;
+  --palette-line: #242b36;
+  --palette-line-strong: #38414f;
+  --palette-accent: #9db4ff;
+  --palette-accent-strong: #2b4fca;
+  --palette-accent-soft: #1a2438;
+  --palette-accent-ink: #cdd9ff;
+  --palette-accent-solid: #315ee8;
+  --palette-on-accent: #ffffff;
+  --palette-on-ink: #0e1116;
+  --palette-inverse: #17191d;
+  --palette-on-inverse: #fbfbfa;
+
+  --palette-grid-line: rgb(255 255 255 / 0.05);
+  --palette-shadow-card: 0 1px 2px rgb(0 0 0 / 0.55), 0 20px 44px -28px rgb(0 0 0 / 0.75);
+  --palette-shadow-lift: 0 2px 4px rgb(0 0 0 / 0.6), 0 32px 72px -36px rgb(0 0 0 / 0.85);
+}
+
 @layer base {
   html {
+    @apply bg-canvas;
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
   }
@@ -40,7 +105,7 @@
   }
 
   ::selection {
-    @apply bg-accent text-white;
+    @apply bg-accent-solid text-on-accent;
   }
 
   :focus-visible {
@@ -117,11 +182,11 @@
   }
 
   .btn-primary {
-    @apply bg-accent text-white shadow-[0_1px_2px_rgb(23_25_29_/_0.12)] hover:bg-accent-strong;
+    @apply bg-accent-solid text-on-accent shadow-[0_1px_2px_rgb(23_25_29_/_0.12)] hover:bg-accent-strong;
   }
 
   .btn-secondary {
-    @apply border border-line-strong bg-surface text-ink hover:border-ink/25 hover:bg-white;
+    @apply border border-line-strong bg-surface text-ink hover:border-ink/25 hover:bg-canvas;
   }
 
   .btn-ghost {
@@ -151,10 +216,16 @@
     pointer-events: none;
   }
 
+  html[data-theme="dark"] .hero-glow {
+    background:
+      radial-gradient(42rem 30rem at 82% 18%, rgb(73 116 255 / 0.2), transparent 68%),
+      radial-gradient(34rem 24rem at 10% 8%, rgb(73 116 255 / 0.09), transparent 72%);
+  }
+
   .grid-panel {
     background-image:
-      linear-gradient(to right, rgb(23 25 29 / 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(23 25 29 / 0.04) 1px, transparent 1px);
+      linear-gradient(to right, var(--palette-grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--palette-grid-line) 1px, transparent 1px);
     background-size: 2rem 2rem;
   }
 
@@ -239,9 +310,30 @@
   .rich-text hr {
     @apply my-10 border-line;
   }
+
+  [data-theme-icon="sun"] {
+    display: none;
+  }
+
+  html[data-theme="dark"] [data-theme-icon="sun"] {
+    display: block;
+  }
+
+  html[data-theme="dark"] [data-theme-icon="moon"] {
+    display: none;
+  }
 }
 
 @layer utilities {
+  /*
+   * The theme toggle needs JavaScript to change anything, so it is hidden
+   * until the head script confirms scripting is available. This lives in the
+   * utilities layer so it can beat the `inline-flex` utility on the button.
+   */
+  html:not(.js) .theme-toggle {
+    display: none;
+  }
+
   .hero-rise {
     animation: hero-rise 600ms var(--ease-soft) both;
   }

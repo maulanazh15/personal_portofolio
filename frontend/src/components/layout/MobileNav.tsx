@@ -217,7 +217,7 @@ export default function MobileNav({ brand, items, languages, labels }: Props) {
                     aria-current={language.current ? 'true' : undefined}
                     class={
                       language.current
-                        ? 'rounded-xl border border-ink bg-ink px-4 py-3 text-white'
+                        ? 'rounded-xl border border-ink bg-ink px-4 py-3 text-on-ink'
                         : 'rounded-xl border border-line bg-surface px-4 py-3 text-ink transition-colors hover:border-line-strong'
                     }
                   >
@@ -225,7 +225,7 @@ export default function MobileNav({ brand, items, languages, labels }: Props) {
                     <span
                       class={
                         language.current
-                          ? 'mt-0.5 block text-[0.6875rem] text-white/65'
+                          ? 'mt-0.5 block text-[0.6875rem] text-on-ink/65'
                           : 'mt-0.5 block text-[0.6875rem] text-muted'
                       }
                     >

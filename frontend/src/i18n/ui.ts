@@ -33,6 +33,8 @@ export interface UIMessages {
     languageSwitcher: string;
     switchLanguage: string;
     externalLink: string;
+    switchToLight: string;
+    switchToDark: string;
   };
   footer: {
     description: string;
@@ -86,6 +88,8 @@ export const ui: Record<Locale, UIMessages> = {
       languageSwitcher: 'Pilih bahasa',
       switchLanguage: 'Ganti ke',
       externalLink: 'Tautan eksternal',
+      switchToLight: 'Ganti ke mode terang',
+      switchToDark: 'Ganti ke mode gelap',
     },
     footer: {
       description:
@@ -169,6 +173,8 @@ export const ui: Record<Locale, UIMessages> = {
       languageSwitcher: 'Select language',
       switchLanguage: 'Switch to',
       externalLink: 'External link',
+      switchToLight: 'Switch to light mode',
+      switchToDark: 'Switch to dark mode',
     },
     footer: {
       description:

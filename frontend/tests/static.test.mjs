@@ -109,6 +109,35 @@ test('every public page has complete SEO metadata and landmarks', () => {
   }
 });
 
+test('theme toggle is localized, scripted, and paired with color-scheme metadata', () => {
+  for (const page of publicPages) {
+    const { $, route } = page;
+    const locale = route.startsWith('/id/') ? 'id' : 'en';
+    const labels =
+      locale === 'id'
+        ? { light: 'Ganti ke mode terang', dark: 'Ganti ke mode gelap' }
+        : { light: 'Switch to light mode', dark: 'Switch to dark mode' };
+
+    assert.equal(attribute(page, 'meta[name="color-scheme"]', 'content'), 'light dark', route);
+    assert.equal(attribute(page, 'meta[name="theme-color"]', 'content'), '#fbfbfa', route);
+    assert.ok($('html').hasClass('no-js'), `${route}: html starts as no-js`);
+
+    const toggles = $('[data-theme-toggle]');
+    assert.equal(toggles.length, 2, `${route}: desktop and mobile toggles`);
+    toggles.each((_, element) => {
+      assert.equal($(element).attr('type'), 'button', `${route}: toggle type`);
+      assert.equal($(element).attr('data-label-light'), labels.light, `${route}: light label`);
+      assert.equal($(element).attr('data-label-dark'), labels.dark, `${route}: dark label`);
+      assert.equal($(element).attr('aria-label'), labels.dark, `${route}: default action label`);
+    });
+
+    assert.ok(
+      $('script').text().includes("getAttribute('data-theme')"),
+      `${route}: inline theme script runs before paint`,
+    );
+  }
+});
+
 test('main-content headings do not skip levels', () => {
   for (const page of publicPages) {
     let previous = 1;

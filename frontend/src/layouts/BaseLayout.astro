@@ -85,7 +85,7 @@ const jsonLd = JSON.stringify({
 ---
 
 <!doctype html>
-<html lang={locale.htmlLang}>
+<html lang={locale.htmlLang} class="no-js">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -93,9 +93,73 @@ const jsonLd = JSON.stringify({
     <meta name="description" content={description} />
     <meta name="author" content={t.identity.name} />
     <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
-    <meta name="theme-color" content="#FBFBFA" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#fbfbfa" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="format-detection" content="telephone=no" />
+
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        root.classList.remove('no-js');
+        root.classList.add('js');
+
+        var key = 'theme';
+        var media = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function stored() {
+          try {
+            var value = localStorage.getItem(key);
+            return value === 'light' || value === 'dark' ? value : null;
+          } catch (error) {
+            return null;
+          }
+        }
+
+        function sync() {
+          var dark = root.getAttribute('data-theme') === 'dark';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', dark ? '#0e1116' : '#fbfbfa');
+
+          var labelKey = dark ? 'data-label-light' : 'data-label-dark';
+          var buttons = document.querySelectorAll('[data-theme-toggle]');
+          for (var i = 0; i < buttons.length; i += 1) {
+            var label = buttons[i].getAttribute(labelKey);
+            if (label) {
+              buttons[i].setAttribute('aria-label', label);
+              buttons[i].setAttribute('title', label);
+            }
+          }
+        }
+
+        function setTheme(theme, persist) {
+          root.setAttribute('data-theme', theme);
+          if (persist) {
+            try {
+              localStorage.setItem(key, theme);
+            } catch (error) {}
+          }
+          sync();
+        }
+
+        setTheme(stored() || (media.matches ? 'dark' : 'light'), false);
+
+        // Follow the system only while the visitor has not chosen explicitly.
+        media.addEventListener('change', function () {
+          if (stored()) return;
+          setTheme(media.matches ? 'dark' : 'light', false);
+        });
+
+        document.addEventListener('click', function (event) {
+          var target = event.target;
+          var button = target && target.closest ? target.closest('[data-theme-toggle]') : null;
+          if (!button) return;
+          event.preventDefault();
+          setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true);
+        });
+
+        document.addEventListener('DOMContentLoaded', sync);
+      })();
+    </script>
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonical} />
@@ -141,7 +205,7 @@ const jsonLd = JSON.stringify({
   <body class="flex min-h-screen flex-col bg-canvas">
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-on-ink"
     >
       {t.a11y.skipToContent}
     </a>

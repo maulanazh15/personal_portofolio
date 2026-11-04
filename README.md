@@ -124,7 +124,7 @@ Do not add fabricated experience, projects, or achievements.
 
 ## Design
 
-Minimal Light editorial system: warm off-white canvas, charcoal type, restrained blue accent, generous whitespace, Manrope headings, Inter body text. Tokens live in `frontend/src/styles/global.css`.
+Minimal editorial system with light and dark palettes: warm off-white or deep slate canvas, charcoal or near-white type, restrained blue accent, generous whitespace, Manrope headings, Inter body text. Visitors can switch themes from the header; the choice is stored locally and defaults to the system preference. Tokens live in `frontend/src/styles/global.css`.
 
 ## Deployment
 

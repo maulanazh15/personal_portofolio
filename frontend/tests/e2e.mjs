@@ -248,6 +248,148 @@ async function main() {
     assert.ok(parseFloat(duration) <= 0.0001, `reduced-motion duration is ${duration}`);
     assert.equal(await reducedPage.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior), 'auto');
     await reducedPage.close();
+
+    // Theme: system default, toggle, persistence, and the no-JS fallback.
+    const themeContext = await browser.newContext({
+      viewport: { width: 1280, height: 900 },
+      colorScheme: 'light',
+    });
+    const themePage = await themeContext.newPage();
+    const themeErrors = [];
+    themePage.on('console', (message) => {
+      if (message.type() === 'error') themeErrors.push(message.text());
+    });
+    themePage.on('pageerror', (error) => themeErrors.push(error.message));
+
+    await themePage.goto(`${previewUrl}/en/`, { waitUntil: 'networkidle' });
+    assert.equal(
+      await themePage.evaluate(() => document.documentElement.dataset.theme),
+      'light',
+      'light system preference should default to light',
+    );
+    const themeToggle = themePage.locator('header .theme-toggle:visible');
+    await themeToggle.waitFor({ state: 'visible' });
+    assert.equal(
+      await themeToggle.getAttribute('aria-label'),
+      'Switch to dark mode',
+      'light mode should offer the dark action',
+    );
+    assert.equal(
+      await themePage.evaluate(() => getComputedStyle(document.documentElement).colorScheme),
+      'light',
+    );
+    const lightCanvas = await themePage.evaluate(
+      () => getComputedStyle(document.body).backgroundColor,
+    );
+
+    await themeToggle.click();
+    assert.equal(
+      await themePage.evaluate(() => document.documentElement.dataset.theme),
+      'dark',
+      'toggle should switch to dark',
+    );
+    assert.equal(
+      await themeToggle.getAttribute('aria-label'),
+      'Switch to light mode',
+      'label should describe the next theme',
+    );
+    assert.equal(
+      await themePage.locator('meta[name="theme-color"]').getAttribute('content'),
+      '#0e1116',
+      'theme-color should follow the active theme',
+    );
+    assert.equal(
+      await themePage.evaluate(() => localStorage.getItem('theme')),
+      'dark',
+      'explicit choice should be stored',
+    );
+    const darkCanvas = await themePage.evaluate(
+      () => getComputedStyle(document.body).backgroundColor,
+    );
+    assert.notEqual(darkCanvas, lightCanvas, 'body background should change with the theme');
+    assert.equal(
+      await themePage
+        .locator('header [data-theme-icon="sun"]')
+        .first()
+        .evaluate((element) => getComputedStyle(element).display),
+      'block',
+      'sun icon should show in dark mode',
+    );
+
+    await themePage.reload({ waitUntil: 'networkidle' });
+    assert.equal(
+      await themePage.evaluate(() => document.documentElement.dataset.theme),
+      'dark',
+      'stored choice should survive a reload',
+    );
+    assert.equal(
+      await themeToggle.getAttribute('aria-label'),
+      'Switch to light mode',
+      'reloaded toggle should advertise the light action',
+    );
+
+    await themePage.goto(`${previewUrl}/id/`, { waitUntil: 'networkidle' });
+    assert.equal(
+      await themePage.evaluate(() => document.documentElement.dataset.theme),
+      'dark',
+      'stored choice should persist across pages',
+    );
+    assert.equal(
+      await themeToggle.getAttribute('aria-label'),
+      'Ganti ke mode terang',
+      'toggle labels should be localized',
+    );
+
+    await themeToggle.click();
+    assert.equal(
+      await themePage.evaluate(() => document.documentElement.dataset.theme),
+      'light',
+    );
+    assert.equal(await themePage.evaluate(() => localStorage.getItem('theme')), 'light');
+    assert.equal(themeErrors.length, 0, themeErrors.join('\n'));
+    await themeContext.close();
+
+    // A dark system preference is honoured when the visitor has no stored choice.
+    const systemDarkContext = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      colorScheme: 'dark',
+    });
+    const systemDarkPage = await systemDarkContext.newPage();
+    await systemDarkPage.goto(`${previewUrl}/id/`, { waitUntil: 'networkidle' });
+    assert.equal(
+      await systemDarkPage.evaluate(() => document.documentElement.dataset.theme),
+      'dark',
+      'dark system preference should default to dark',
+    );
+    const systemToggle = systemDarkPage.locator('header .theme-toggle:visible');
+    await systemToggle.waitFor({ state: 'visible' });
+    await systemToggle.click();
+    assert.equal(
+      await systemDarkPage.evaluate(() => document.documentElement.dataset.theme),
+      'light',
+      'explicit light choice should win over a dark system preference',
+    );
+    await systemDarkPage.reload({ waitUntil: 'networkidle' });
+    assert.equal(
+      await systemDarkPage.evaluate(() => document.documentElement.dataset.theme),
+      'light',
+      'explicit light choice should survive a reload',
+    );
+    await systemDarkContext.close();
+
+    // Without JavaScript the toggle must not advertise an action it cannot take.
+    const noScriptContext = await browser.newContext({ javaScriptEnabled: false });
+    const noScriptPage = await noScriptContext.newPage();
+    await noScriptPage.goto(`${previewUrl}/en/`);
+    assert.equal(
+      await noScriptPage
+        .locator('[data-theme-toggle]')
+        .first()
+        .evaluate((element) => getComputedStyle(element).display),
+      'none',
+      'theme toggle should be hidden without JavaScript',
+    );
+    await noScriptContext.close();
     
     // Language switcher preserves localized detail routes.
     await page.setViewportSize({ width: 1280, height: 900 });
