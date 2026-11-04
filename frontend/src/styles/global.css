@@ -164,6 +164,7 @@
 
   .rich-text {
     @apply text-[0.975rem] leading-[1.75] text-ink-soft;
+    overflow-wrap: break-word;
   }
 
   .rich-text > * + * {
@@ -206,6 +207,29 @@
 
   .rich-text code {
     @apply rounded bg-canvas px-1.5 py-0.5 font-mono text-[0.85em] text-ink;
+    overflow-wrap: anywhere;
+  }
+
+  .rich-text pre {
+    @apply max-w-full overflow-x-auto rounded-card border border-line bg-canvas p-4 text-[0.82rem] leading-relaxed;
+  }
+
+  .rich-text pre code {
+    @apply block min-w-max bg-transparent p-0 text-[1em];
+    overflow-wrap: normal;
+  }
+
+  .rich-text table {
+    @apply block w-full max-w-full overflow-x-auto border-collapse text-sm;
+  }
+
+  .rich-text th,
+  .rich-text td {
+    @apply border border-line px-3 py-2 text-left align-top;
+  }
+
+  .rich-text th {
+    @apply bg-canvas font-semibold text-ink;
   }
 
   .rich-text blockquote {

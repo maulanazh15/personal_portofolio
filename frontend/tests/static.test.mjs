@@ -43,9 +43,20 @@ function attribute(page, selector, name) {
 }
 
 test('production build contains the expected page set', () => {
-  assert.equal(pages.length, 20);
-  assert.equal(publicPages.length, 18);
-  for (const route of ['/id/', '/en/', '/id/kontak/', '/en/contact/', '/id/proyek/', '/en/projects/']) {
+  assert.equal(pages.length, 24);
+  assert.equal(publicPages.length, 22);
+  for (const route of [
+    '/id/',
+    '/en/',
+    '/id/kontak/',
+    '/en/contact/',
+    '/id/proyek/',
+    '/en/projects/',
+    '/id/proyek/homelab-server-berbasis-android/',
+    '/en/projects/android-based-self-hosted-homelab/',
+    '/id/blog/membangun-homelab-server-android-termux-go-cloudflare/',
+    '/en/blog/building-android-homelab-server-termux-go-cloudflare/',
+  ]) {
     assert.ok(routes.has(route), `missing ${route}`);
   }
 });
